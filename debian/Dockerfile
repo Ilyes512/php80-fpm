@@ -1,9 +1,7 @@
-FROM php:8.0.0alpha2-fpm-buster as runtime
+FROM php:8.0.0-fpm-buster as runtime
 
-# Latest version of UV at the moment: https://pecl.php.net/package/uv
-ARG PHP_UV_VERSION=0.2.4
-# Latest version of Pickle at the moment: https://api.github.com/repos/FriendsOfPHP/pickle/releases/latest
-ARG PICKLE_VERSION=v0.6.0
+# Latest version of event at the moment: https://pecl.php.net/package/event
+ARG PHP_EVENT_VERSION=3.0.1
 
 WORKDIR /var/www
 
@@ -24,8 +22,8 @@ RUN apt-get update \
         libfreetype6 \
         # dependency of php zip-extension
         libzip4 \
-        # dependency of php uv-extension
-        libuv1 \
+        # dependency of php event-extension
+        libevent-2.1-6 \
     # install packages that are needed for building php extensions
     && apt-get install --assume-yes --no-install-recommends \
         $PHPIZE_DEPS \
@@ -38,8 +36,9 @@ RUN apt-get update \
         libfreetype6-dev \
         # dependency of php zip-extension
         libzip-dev \
-        # dependency of php uv-extension
-        libuv1-dev \
+        # dependency of php event-extension
+        libevent-dev \
+        libssl-dev \
     # configure php gd-extension
     && docker-php-ext-configure gd \
         --enable-gd \
@@ -55,10 +54,11 @@ RUN apt-get update \
         gd \
         bcmath \
         zip \
-    && curl -fsSLo /usr/local/bin/pickle "https://github.com/FriendsOfPHP/pickle/releases/download/$PICKLE_VERSION/pickle.phar" \
-    && chmod +x /usr/local/bin/pickle \
-    # && pickle install "uv@$PHP_UV_VERSION" --defaults \
-    # && docker-php-ext-enable uv \
+        # dependency of php event-extension
+        sockets \
+    && pecl install "event-$PHP_EVENT_VERSION" \
+    && docker-php-ext-enable event \
+    && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     # purge packages that where only needed for building php extensions
     && apt-get purge --assume-yes \
         $PHPIZE_DEPS \
@@ -67,8 +67,8 @@ RUN apt-get update \
         libjpeg62-turbo-dev \
         libpng-dev \
         libzip-dev \
-        libuv1-dev \
-    && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+        libevent-dev \
+        libssl-dev \
     # remove all (non-hidden) files and dirs in /var/www/
     && rm -rf /var/www/* \
     && rm -rf /var/lib/apt/lists/* \
@@ -95,11 +95,11 @@ FROM runtime as builder
 # ENV COMPOSER_ALLOW_SUPERUSER 1
 # ENV PATH "/root/.composer/vendor/bin:${PATH}"
 
-# Latest version of Composer: https://getcomposer.org/download/
-ARG COMPOSER_VERSION=2.0.0-alpha2
-ARG COMPOSER_SHA256=6490fc59e48bf1ea5f3301cde071a56dc63e9a7dbb5540a94501bec570cabd5d
-# Latest version of XDdebug: https://xdebug.org/
-ARG XDEBUG_VERSION=2.9.6
+# Latest version of Composer: https://getcomposer.org/download
+ARG COMPOSER_VERSION=2.0.8
+ARG COMPOSER_SHA256=2021f0d52b446e0efe3c548cc058ab5671fa38cdbcf814e7911c7e9d71d61538
+# Latest version of XDdebug: https://xdebug.org
+ARG XDEBUG_VERSION=3.0.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -116,8 +116,8 @@ RUN curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/loc
         git \
         unzip \
         sqlite3 \
-    # && pickle install "xdebug-$XDEBUG_VERSION" \
-    # && docker-php-ext-enable xdebug \
+    && pecl install "xdebug-$XDEBUG_VERSION" \
+    && docker-php-ext-enable xdebug \
     && apt-get purge --assume-yes $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/* \
     && cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \

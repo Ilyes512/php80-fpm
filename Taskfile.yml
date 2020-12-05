@@ -1,6 +1,8 @@
-version: "2"
+version: "3"
 
-silent: false
+dotenv: [.env]
+
+silent: true
 
 ########################################################################################################################
 #
@@ -25,12 +27,12 @@ tasks:
       - task: d:build
         vars:
           OS: debian
-          TARGET: builder
+          TARGET: runtime
           TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
       - task: d:build
         vars:
           OS: debian
-          TARGET: runtime
+          TARGET: builder
           TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
 
   d:build:alpine:
@@ -39,19 +41,19 @@ tasks:
       - task: d:build
         vars:
           OS: alpine
-          TARGET: builder
+          TARGET: runtime
           TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
       - task: d:build
         vars:
           OS: alpine
-          TARGET: runtime
+          TARGET: builder
           TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
 
   d:build:
-    # deps:
-    #   - task: d:lint
-    #     vars:
-    #       OS: '{{.OS}}'
+    deps:
+      - task: d:lint
+        vars:
+          OS: '{{.OS}}'
     preconditions:
       - sh: test '{{.OS}}' != '<no value>'
         msg: OS needs to contain the Docker OS [alpine, debian]
@@ -62,10 +64,10 @@ tasks:
     cmds:
       - docker build
         --build-arg VCS_REF=$(git rev-parse HEAD)
-        --build-arg CREATED=$(date --iso-8601=seconds)
+        --build-arg CREATED=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
         --file {{.OS}}/Dockerfile
         --target {{.TARGET}}
-        --tag {{.TAG_REPOSITORY}}/{{.TAG_NAME}}:{{.OS}}-{{.TAG_VERSION}}-{{.TARGET}}
+        --tag $TAG_REPOSITORY/$TAG_NAME:{{.OS}}-{{.TAG_VERSION}}-{{.TARGET}}
         .
 
   d:lint:
@@ -77,7 +79,7 @@ tasks:
       - docker run
         --interactive
         --rm
-        hadolint/hadolint:{{.HADOLINT_TAG_VERSION}}
+        hadolint/hadolint:$HADOLINT_TAG_VERSION
         hadolint
         --ignore DL3018
         --ignore DL3008

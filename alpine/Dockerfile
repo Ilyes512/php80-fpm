@@ -1,9 +1,7 @@
-FROM php:8.0.0alpha2-fpm-alpine3.12 as runtime
+FROM php:8.0.0-fpm-alpine3.12 as runtime
 
-# Latest version of UV at the moment: https://pecl.php.net/package/uv
-ARG PHP_UV_VERSION=0.2.4
-# Latest version of Pickle at the moment: https://api.github.com/repos/FriendsOfPHP/pickle/releases/latest
-ARG PICKLE_VERSION=v0.6.0
+# Latest version of event at the moment: https://pecl.php.net/package/event
+ARG PHP_EVENT_VERSION=3.0.1
 
 WORKDIR /var/www
 
@@ -23,8 +21,8 @@ RUN apk add --no-cache --upgrade \
         freetype \
         # dependency of php zip-extension
         libzip \
-        # dependency of php uv-extension
-        libuv \
+        # dependency of php event-extension
+        libevent \
     # install needed php extension configuration/installing packages
     && apk add --no-cache --upgrade --virtual .build \
         $PHPIZE_DEPS \
@@ -37,8 +35,9 @@ RUN apk add --no-cache --upgrade \
         freetype-dev \
         # dependency of php zip-extension
         libzip-dev \
-        # dependency of php uv-extension
-        libuv-dev \
+        # dependency of php event-extension
+        libevent-dev \
+        openssl-dev \
     # configure php gd-extension
     && docker-php-ext-configure gd \
         --enable-gd \
@@ -54,11 +53,12 @@ RUN apk add --no-cache --upgrade \
         gd \
         bcmath \
         zip \
-    && curl -fsSLo /usr/local/bin/pickle "https://github.com/FriendsOfPHP/pickle/releases/download/$PICKLE_VERSION/pickle.phar" \
-    && chmod +x /usr/local/bin/pickle \
-    # && pickle install "uv@$PHP_UV_VERSION" --defaults \
-    # && docker-php-ext-enable uv \
+        # dependency of php event-extension
+        sockets \
+    && pecl install "event-$PHP_EVENT_VERSION" \
+    && docker-php-ext-enable event \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && ln -sf /usr/bin/msmtp /usr/sbin/sendmail \
     && apk del .build \
     # remove all (non-hidden) files and dirs in /var/www/
     && rm -rf /var/www/* \
@@ -82,14 +82,13 @@ LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-f
 
 FROM runtime as builder
 
-# ENV COMPOSER_ALLOW_SUPERUSER 1
-# ENV PATH "/root/.composer/vendor/bin:${PATH}"
+ENV PATH "/root/.composer/vendor/bin:${PATH}"
 
-# Latest version of Composer: https://getcomposer.org/download/
-ARG COMPOSER_VERSION=2.0.0-alpha2
-ARG COMPOSER_SHA256=6490fc59e48bf1ea5f3301cde071a56dc63e9a7dbb5540a94501bec570cabd5d
-# Latest version of XDdebug: https://xdebug.org/
-ARG XDEBUG_VERSION=2.9.6
+# Latest version of Composer: https://getcomposer.org/download
+ARG COMPOSER_VERSION=2.0.8
+ARG COMPOSER_SHA256=2021f0d52b446e0efe3c548cc058ab5671fa38cdbcf814e7911c7e9d71d61538
+# Latest version of XDdebug: https://xdebug.org
+ARG XDEBUG_VERSION=3.0.1
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
@@ -106,8 +105,8 @@ RUN curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/loc
         sqlite \
     # Needed for xdebug extension configuration (is removed later on, see --virtual)
     && apk add --no-cache --upgrade --virtual .build $PHPIZE_DEPS \
-    # && pickle install "xdebug@$XDEBUG_VERSION" \
-    # && docker-php-ext-enable xdebug \
+    && pecl install "xdebug-$XDEBUG_VERSION" \
+    && docker-php-ext-enable xdebug \
     && cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
     && apk del .build \
     && rm -rf /tmp/*
