@@ -2,6 +2,8 @@
 
 A PHP 8.0 based Docker base image.
 
+[![Build Docker images](https://github.com/Ilyes512/docker-php80-fpm/workflows/Build%20Docker%20images/badge.svg)](https://github.com/Ilyes512/docker-php80-fpm/actions?query=workflow%3A%22Build+Docker+images%22)
+
 ## Pulling the images
 
 ```
