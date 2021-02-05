@@ -7,7 +7,6 @@ A PHP 8.0 based Docker base image.
 ## Pulling the images
 
 ```
-# Debian based
 docker pull ilyes512/php80-fpm:builder-latest
 docker pull ilyes512/php80-fpm:runtime-latest
 docker pull ilyes512/php80-fpm:vscode-latest
