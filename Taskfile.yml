@@ -1,0 +1,67 @@
+version: "3"
+
+dotenv: [.env-taskfile]
+
+silent: true
+
+########################################################################################################################
+#
+# TOC
+#
+########################################################################################################################
+#
+# 1. BUILD
+#
+########################################################################################################################
+
+tasks:
+  ######################################################################################################################
+  #
+  #  1. BUILD
+  #
+  ######################################################################################################################
+
+  d:build:
+    desc: Build all PHP Docker image targets
+    cmds:
+      - task: d:build:target
+        vars:
+          TARGET: runtime
+          TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
+      - task: d:build:target
+        vars:
+          TARGET: builder
+          TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
+      - task: d:build:target
+        vars:
+          TARGET: vscode
+          TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
+
+  d:build:target:
+    deps:
+      - task: d:lint
+    preconditions:
+      - sh: test '{{.TARGET}}' != '<no value>'
+        msg: TARGET needs to contain the Docker TARGET [runtime, builder, vscode]
+      - sh: test '{{.TAG_VERSION}}' != '<no value>'
+        msg: TAG_VERSION needs to contain the tag that will be assigned to the Docker build
+    cmds:
+      - docker build
+        --build-arg VCS_REF=$(git rev-parse HEAD)
+        --build-arg CREATED=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        --target {{.TARGET}}
+        --tag $TAG_REPOSITORY/$TAG_NAME:{{.TARGET}}-{{.TAG_VERSION}}
+        .
+
+  d:lint:
+    desc: Apply a Dockerfile linter (https://github.com/hadolint/hadolint)
+    cmds:
+      - docker run
+        --interactive
+        --rm
+        hadolint/hadolint:$HADOLINT_TAG_VERSION
+        hadolint
+        --ignore DL3018
+        --ignore DL3008
+        -
+        < Dockerfile

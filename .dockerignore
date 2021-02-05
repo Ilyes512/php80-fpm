@@ -1,0 +1,8 @@
+.git
+.gitignore
+.github
+.editorconfig
+.env-taskfile
+.env
+README.md
+Taskfile.yml
