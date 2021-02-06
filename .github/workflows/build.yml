@@ -42,7 +42,7 @@ jobs:
           RUNTIME_TAGS="${DOCKER_IMAGE}:runtime-${VERSION}"
           BUILDER_TAGS="${DOCKER_IMAGE}:builder-${VERSION}"
           VSCODE_TAGS="${DOCKER_IMAGE}:vscode-${VERSION}"
-          if [ "${{ github.event_name }}" = "push" ]; then
+          if [[ "${{ github.event_name }}" == "push" && $GITHUB_REF != refs/tags/* ]]; then
             RUNTIME_TAGS="$RUNTIME_TAGS,${DOCKER_IMAGE}:runtime-sha-${GITHUB_SHA::8}"
             BUILDER_TAGS="$BUILDER_TAGS,${DOCKER_IMAGE}:builder-sha-${GITHUB_SHA::8}"
             VSCODE_TAGS="$VSCODE_TAGS,${DOCKER_IMAGE}:vscode-sha-${GITHUB_SHA::8}"
