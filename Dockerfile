@@ -64,11 +64,11 @@ RUN apt-get update \
     && apt-get purge --assume-yes \
         $PHPIZE_DEPS \
         libicu-dev \
-        libfreetype6-dev \
-        libjpeg62-turbo-dev \
         libpng-dev \
+        libwebp-dev \
+        libjpeg62-turbo-dev \
+        libfreetype6-dev \
         libzip-dev \
-        libuv1-dev \
         libevent-dev \
         libssl-dev \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
@@ -156,6 +156,7 @@ RUN apt-get update \
         openssh-client \
         sudo \
         # Live Share (Extension) deps
+        libssl1.1 \
         libkrb5-3 \
         zlib1g \
         libicu63 \
