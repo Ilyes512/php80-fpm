@@ -1,7 +1,7 @@
-FROM php:8.0.2-fpm-buster as runtime
+FROM php:8.0.3-fpm-buster as runtime
 
 # Latest version of event-extension: https://pecl.php.net/package/event
-ARG PHP_EVENT_VERSION=3.0.2
+ARG PHP_EVENT_VERSION=3.0.4
 
 WORKDIR /var/www
 
@@ -100,10 +100,10 @@ FROM runtime as builder
 ENV PATH "/root/.composer/vendor/bin:${PATH}"
 
 # Latest version of Composer: https://getcomposer.org/download
-ARG COMPOSER_VERSION=2.0.9
-ARG COMPOSER_SHA256=24faa5bc807e399f32e9a21a33fbb5b0686df9c8850efabe2c047c2ccfb9f9cc
+ARG COMPOSER_VERSION=2.0.12
+ARG COMPOSER_SHA256=82ea8c1537cfaceb7e56f6004c7ccdf99ddafce7237c07374d920e635730a631
 # Latest version of XDdebug: https://pecl.php.net/package/xdebug
-ARG XDEBUG_VERSION=3.0.2
+ARG XDEBUG_VERSION=3.0.4
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
