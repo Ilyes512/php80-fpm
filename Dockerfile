@@ -149,7 +149,38 @@ LABEL org.opencontainers.image.vendor="ilyes512"
 LABEL org.opencontainers.image.licenses=MIT
 LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-fpm
 
-FROM builder as vscode
+FROM builder as builder_nodejs
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN apt-get update \
+    && curl -fsSL https://deb.nodesource.com/setup_15.x | bash - \
+    && apt-get install --assume-yes --no-install-recommends \
+        gcc \
+        g++ \
+        make \
+        nodejs \
+    && npm -g install npm@latest \
+    && apt-get autoremove --assume-yes \
+    && apt-get clean --assume-yes \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/*
+
+ARG VCS_REF
+ARG CREATED
+ARG VERSION=$PHP_VERSION
+LABEL org.opencontainers.image.revision=$VCS_REF
+LABEL org.opencontainers.image.version=$VERSION
+LABEL org.opencontainers.image.created=$CREATED
+LABEL org.opencontainers.image.title=php80-fpm
+LABEL org.opencontainers.image.description="A PHP 8.0 based base image"
+LABEL org.opencontainers.image.url=https://github.com/Ilyes512/docker-php80-fpm
+LABEL org.opencontainers.image.documentation=https://github.com/Ilyes512/docker-php80-fpm/blob/master/README.md
+LABEL org.opencontainers.image.vendor="ilyes512"
+LABEL org.opencontainers.image.licenses=MIT
+LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-fpm
+
+FROM builder_nodejs as vscode
 
 RUN apt-get update \
     && apt-get install --assume-yes --no-install-recommends \

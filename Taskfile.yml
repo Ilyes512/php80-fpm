@@ -34,6 +34,10 @@ tasks:
           TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
       - task: d:build:target
         vars:
+          TARGET: builder_nodejs
+          TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
+      - task: d:build:target
+        vars:
           TARGET: vscode
           TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
 

@@ -41,15 +41,18 @@ jobs:
           fi
           RUNTIME_TAGS="${DOCKER_IMAGE}:runtime-${VERSION}"
           BUILDER_TAGS="${DOCKER_IMAGE}:builder-${VERSION}"
+          BUILDER_NODEJS_TAGS="${DOCKER_IMAGE}:builder-nodejs-${VERSION}"
           VSCODE_TAGS="${DOCKER_IMAGE}:vscode-${VERSION}"
           if [[ "${{ github.event_name }}" == "push" && $GITHUB_REF != refs/tags/* ]]; then
             RUNTIME_TAGS="$RUNTIME_TAGS,${DOCKER_IMAGE}:runtime-sha-${GITHUB_SHA::8}"
             BUILDER_TAGS="$BUILDER_TAGS,${DOCKER_IMAGE}:builder-sha-${GITHUB_SHA::8}"
+            BUILDER_NODEJS_TAGS="$BUILDER_NODEJS_TAGS,${DOCKER_IMAGE}:builder-nodejs-sha-${GITHUB_SHA::8}"
             VSCODE_TAGS="$VSCODE_TAGS,${DOCKER_IMAGE}:vscode-sha-${GITHUB_SHA::8}"
           fi
           echo ::set-output name=version::${VERSION}
           echo ::set-output name=runtime_tags::${RUNTIME_TAGS}
           echo ::set-output name=builder_tags::${BUILDER_TAGS}
+          echo ::set-output name=builder_nodejs_tags::${BUILDER_NODEJS_TAGS}
           echo ::set-output name=vscode_tags::${VSCODE_TAGS}
           echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           echo ::set-output name=docker_image::${DOCKER_IMAGE}
@@ -78,6 +81,17 @@ jobs:
           target: builder
           tags: ${{ steps.prep.outputs.builder_tags }}
           cache-from: type=registry,ref=${{ steps.prep.outputs.docker_image }}:builder-latest
+          cache-to: type=inline
+          build-args: |
+            VCS_REF=${{ github.sha }}
+            CREATED=${{ steps.prep.outputs.created }}
+      - name: Build builder with nodejs target
+        uses: docker/build-push-action@v2
+        with:
+          push: ${{ github.event_name != 'pull_request' }}
+          target: builder_nodejs
+          tags: ${{ steps.prep.outputs.builder_nodejs_tags }}
+          cache-from: type=registry,ref=${{ steps.prep.outputs.docker_image }}:builder-nodejs-latest
           cache-to: type=inline
           build-args: |
             VCS_REF=${{ github.sha }}
