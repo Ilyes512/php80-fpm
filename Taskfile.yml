@@ -46,7 +46,7 @@ tasks:
       - task: d:lint
     preconditions:
       - sh: test '{{.TARGET}}' != '<no value>'
-        msg: TARGET needs to contain the Docker TARGET [runtime, builder, vscode]
+        msg: TARGET needs to contain the Docker TARGET [runtime, builder, builder_nodejs, vscode]
       - sh: test '{{.TAG_VERSION}}' != '<no value>'
         msg: TAG_VERSION needs to contain the tag that will be assigned to the Docker build
     cmds:
