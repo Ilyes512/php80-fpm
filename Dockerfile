@@ -59,7 +59,7 @@ RUN apt-get update \
         # dependency of php event-extension
         sockets \
     && pecl install "event-$PHP_EVENT_VERSION" \
-    && docker-php-ext-enable event --ini-name docker-php-ext-zz-event.ini event \
+    && docker-php-ext-enable --ini-name docker-php-ext-zz-event.ini event \
     # purge packages that where only needed for building php extensions
     && apt-get purge --assume-yes \
         $PHPIZE_DEPS \
