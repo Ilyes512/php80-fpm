@@ -97,8 +97,6 @@ LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-f
 
 FROM runtime as builder
 
-ENV PATH "/root/.composer/vendor/bin:${PATH}"
-
 # Latest version of Phive: https://api.github.com/repos/phar-io/phive/releases/latest
 ARG PHIVE_VERSION=0.15.0
 # Latest version of Composer: https://getcomposer.org/download
