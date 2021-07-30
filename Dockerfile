@@ -154,7 +154,7 @@ FROM builder as builder_nodejs
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN apt-get update \
-    && curl -fsSL https://deb.nodesource.com/setup_15.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_current.x | bash - \
     && apt-get install --assume-yes --no-install-recommends \
         gcc \
         g++ \
