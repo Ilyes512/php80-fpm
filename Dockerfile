@@ -100,7 +100,7 @@ FROM runtime as builder
 ENV PATH "/root/.composer/vendor/bin:${PATH}"
 
 # Latest version of Phive: https://api.github.com/repos/phar-io/phive/releases/latest
-ARG PHIVE_VERSION=0.14.5
+ARG PHIVE_VERSION=0.15.0
 # Latest version of Composer: https://getcomposer.org/download
 ARG COMPOSER_VERSION=2.1.5
 # Latest version of XDdebug: https://pecl.php.net/package/xdebug
@@ -120,11 +120,12 @@ RUN apt-get update \
         gnupg \
     && curl -fsSLo /usr/local/bin/phive "https://github.com/phar-io/phive/releases/download/$PHIVE_VERSION/phive-$PHIVE_VERSION.phar" \
     && curl -fsSLo /tmp/phive.phar.asc "https://github.com/phar-io/phive/releases/download/$PHIVE_VERSION/phive-$PHIVE_VERSION.phar.asc" \
-    && gpg --keyserver pool.sks-keyservers.net --recv-keys 0x9D8A98B29B2D5D79 \
+    && gpg --keyserver keys.openpgp.org --recv-keys 0x9D8A98B29B2D5D79 \
     && gpg --verify /tmp/phive.phar.asc /usr/local/bin/phive \
     && chmod +x /usr/local/bin/phive \
     && phive update-repository-list \
     && phive install --global composer:$COMPOSER_VERSION --trust-gpg-keys CBB3D576F2A0946F \
+    && rm -rf /root/.phive \
     && pecl install "xdebug-$XDEBUG_VERSION" \
     && docker-php-ext-enable xdebug \
     && cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
