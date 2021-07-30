@@ -1,5 +1,7 @@
 FROM php:8.0.9-fpm-buster as runtime
 
+ARG UNIQUE_ID_FOR_CACHEFROM=runtime
+
 # Latest version of event-extension: https://pecl.php.net/package/event
 ARG PHP_EVENT_VERSION=3.0.5
 
@@ -97,6 +99,8 @@ LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-f
 
 FROM runtime as builder
 
+ARG UNIQUE_ID_FOR_CACHEFROM=builder
+
 # Latest version of Phive: https://api.github.com/repos/phar-io/phive/releases/latest
 ARG PHIVE_VERSION=0.15.0
 # Latest version of Composer: https://getcomposer.org/download
@@ -152,6 +156,8 @@ FROM builder as builder_nodejs
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+ARG UNIQUE_ID_FOR_CACHEFROM=builder_nodejs
+
 RUN apt-get update \
     && curl -fsSL https://deb.nodesource.com/setup_current.x | bash - \
     && apt-get install --assume-yes --no-install-recommends \
@@ -180,6 +186,8 @@ LABEL org.opencontainers.image.licenses=MIT
 LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-fpm
 
 FROM builder_nodejs as vscode
+
+ARG UNIQUE_ID_FOR_CACHEFROM=vscode
 
 RUN apt-get update \
     && apt-get install --assume-yes --no-install-recommends \
