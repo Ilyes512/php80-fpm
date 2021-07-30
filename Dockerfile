@@ -12,7 +12,7 @@ RUN apt-get update \
         ca-certificates \
         openssl \
         curl \
-        msmtp \
+        msmtp-mta \
         # dependency of the php intl-extension
         libicu63 \
         # dependency of the php gd-extension
