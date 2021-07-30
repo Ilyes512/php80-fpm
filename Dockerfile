@@ -1,4 +1,4 @@
-FROM php:8.0.7-fpm-buster as runtime
+FROM php:8.0.9-fpm-buster as runtime
 
 # Latest version of event-extension: https://pecl.php.net/package/event
 ARG PHP_EVENT_VERSION=3.0.4
