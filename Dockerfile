@@ -1,4 +1,4 @@
-FROM php:8.0.9-fpm-buster as runtime
+FROM php:8.0.12-fpm-buster as runtime
 
 ARG UNIQUE_ID_FOR_CACHEFROM=runtime
 
