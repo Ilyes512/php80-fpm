@@ -1,55 +1,56 @@
-FROM php:8.0.12-fpm-buster as runtime
+FROM php:8.0.14-fpm-bullseye AS runtime
 
 ARG UNIQUE_ID_FOR_CACHEFROM=runtime
 
 # Latest version of event-extension: https://pecl.php.net/package/event
-ARG PHP_EVENT_VERSION=3.0.5
+ARG PHP_EVENT_VERSION=3.0.6
+
+ENV SMTPHOST mail
+ENV SMTPEHLO localhost
 
 WORKDIR /var/www
 
-    # install deps
-    # hadolint ignore=SC2086
 RUN apt-get update \
     && apt-get install --assume-yes --no-install-recommends \
         ca-certificates \
         openssl \
         curl \
         msmtp-mta \
-        # dependency of the php intl-extension
-        libicu63 \
-        # dependency of the php gd-extension
+        # Dependency of the PHP intl-extension
+        libicu67 \
+        # Dependency of the PHP gd-extension
         libpng16-16 \
         libwebp6 \
         libjpeg62-turbo \
         libfreetype6 \
-        # dependency of php zip-extension
+        # Dependency of PHP zip-extension
         libzip4 \
-        # dependency of php event-extension
-        libevent-2.1-6 \
-        libevent-openssl-2.1-6 \
-        libevent-extra-2.1-6 \
-    # install packages that are needed for building php extensions
+        # Dependency of PHP event-extension
+        libevent-2.1-7 \
+        libevent-openssl-2.1-7 \
+        libevent-extra-2.1-7 \
+    # Install packages that are needed for building PHP extensions
     && apt-get install --assume-yes --no-install-recommends \
         $PHPIZE_DEPS \
-        # dependency of the php intl-extension
+        # Dependency of the PHP intl-extension
         libicu-dev \
-        # dependencies of php gd-extension
+        # Dependencies of PHP gd-extension
         libpng-dev \
         libwebp-dev \
         libjpeg62-turbo-dev \
         libfreetype6-dev \
-        # dependency of php zip-extension
+        # Dependency of PHP zip-extension
         libzip-dev \
-        # dependency of php event-extension
+        # Dependency of PHP event-extension
         libevent-dev \
         libssl-dev \
-    # configure php gd-extension
+    # Configure PHP gd-extension
     && docker-php-ext-configure gd \
         --enable-gd \
         --with-jpeg \
         --with-freetype \
         --with-webp \
-    # install php extensions
+    # Install PHP extensions
     && docker-php-ext-install -j "$(nproc --all)" \
         pdo_mysql \
         intl \
@@ -58,11 +59,11 @@ RUN apt-get update \
         gd \
         bcmath \
         zip \
-        # dependency of php event-extension
+        # Dependency of PHP event-extension
         sockets \
     && pecl install "event-$PHP_EVENT_VERSION" \
     && docker-php-ext-enable --ini-name docker-php-ext-zz-event.ini event \
-    # purge packages that where only needed for building php extensions
+    # Purge packages that where only needed for building php extensions
     && apt-get purge --assume-yes \
         $PHPIZE_DEPS \
         libicu-dev \
@@ -74,7 +75,7 @@ RUN apt-get update \
         libevent-dev \
         libssl-dev \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
-    # remove all (non-hidden) files and dirs in /var/www/
+    # Cleanup
     && rm -rf /var/www/* \
     && apt-get autoremove --assume-yes \
     && apt-get clean --assume-yes \
@@ -83,33 +84,17 @@ RUN apt-get update \
 
 COPY files /
 
-ARG VCS_REF
-ARG CREATED
-ARG VERSION=$PHP_VERSION
-LABEL org.opencontainers.image.revision=$VCS_REF
-LABEL org.opencontainers.image.version=$VERSION
-LABEL org.opencontainers.image.created=$CREATED
-LABEL org.opencontainers.image.title=php80-fpm
-LABEL org.opencontainers.image.description="A PHP 8.0 based base image"
-LABEL org.opencontainers.image.url=https://github.com/Ilyes512/docker-php80-fpm
-LABEL org.opencontainers.image.documentation=https://github.com/Ilyes512/docker-php80-fpm/blob/master/README.md
-LABEL org.opencontainers.image.vendor="ilyes512"
-LABEL org.opencontainers.image.licenses=MIT
-LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-fpm
-
-FROM runtime as builder
+FROM runtime AS builder
 
 ARG UNIQUE_ID_FOR_CACHEFROM=builder
 
 # Latest version of Phive: https://api.github.com/repos/phar-io/phive/releases/latest
 ARG PHIVE_VERSION=0.15.0
 # Latest version of Composer: https://getcomposer.org/download
-ARG COMPOSER_VERSION=2.1.5
-# Latest version of XDdebug: https://pecl.php.net/package/xdebug
-ARG XDEBUG_VERSION=3.0.4
+ARG COMPOSER_VERSION=2.2.3
+# Latest version of Xdebug: https://pecl.php.net/package/xdebug
+ARG XDEBUG_VERSION=3.1.2
 
-    # install composer and xdebug
-    # hadolint ignore=SC2086
 RUN apt-get update \
     && apt-get install --assume-yes --no-install-recommends \
         # Needed for xdebug extension configuration
@@ -120,17 +105,21 @@ RUN apt-get update \
         sqlite3 \
         # Needed for phive:
         gnupg \
+    # Install Phive
     && curl -fsSLo /usr/local/bin/phive "https://github.com/phar-io/phive/releases/download/$PHIVE_VERSION/phive-$PHIVE_VERSION.phar" \
     && curl -fsSLo /tmp/phive.phar.asc "https://github.com/phar-io/phive/releases/download/$PHIVE_VERSION/phive-$PHIVE_VERSION.phar.asc" \
     && gpg --keyserver keys.openpgp.org --recv-keys 0x9D8A98B29B2D5D79 \
     && gpg --verify /tmp/phive.phar.asc /usr/local/bin/phive \
     && chmod +x /usr/local/bin/phive \
     && phive update-repository-list \
+    # Install Composer using Phive
     && phive install --global composer:$COMPOSER_VERSION --trust-gpg-keys CBB3D576F2A0946F \
     && rm -rf /root/.phive \
+    # Install Xdebug PHP extension
     && pecl install "xdebug-$XDEBUG_VERSION" \
     && docker-php-ext-enable xdebug \
     && cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
+    # Cleanup
     && apt-get purge --assume-yes \
         $PHPIZE_DEPS \
     && apt-get autoremove --assume-yes \
@@ -138,21 +127,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/*
 
-ARG VCS_REF
-ARG CREATED
-ARG VERSION=$PHP_VERSION
-LABEL org.opencontainers.image.revision=$VCS_REF
-LABEL org.opencontainers.image.version=$VERSION
-LABEL org.opencontainers.image.created=$CREATED
-LABEL org.opencontainers.image.title=php80-fpm
-LABEL org.opencontainers.image.description="A PHP 8.0 based base image"
-LABEL org.opencontainers.image.url=https://github.com/Ilyes512/docker-php80-fpm
-LABEL org.opencontainers.image.documentation=https://github.com/Ilyes512/docker-php80-fpm/blob/master/README.md
-LABEL org.opencontainers.image.vendor="ilyes512"
-LABEL org.opencontainers.image.licenses=MIT
-LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-fpm
-
-FROM builder as builder_nodejs
+FROM builder AS builder_nodejs
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -171,21 +146,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/*
 
-ARG VCS_REF
-ARG CREATED
-ARG VERSION=$PHP_VERSION
-LABEL org.opencontainers.image.revision=$VCS_REF
-LABEL org.opencontainers.image.version=$VERSION
-LABEL org.opencontainers.image.created=$CREATED
-LABEL org.opencontainers.image.title=php80-fpm
-LABEL org.opencontainers.image.description="A PHP 8.0 based base image"
-LABEL org.opencontainers.image.url=https://github.com/Ilyes512/docker-php80-fpm
-LABEL org.opencontainers.image.documentation=https://github.com/Ilyes512/docker-php80-fpm/blob/master/README.md
-LABEL org.opencontainers.image.vendor="ilyes512"
-LABEL org.opencontainers.image.licenses=MIT
-LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-fpm
-
-FROM builder_nodejs as vscode
+FROM builder_nodejs AS vscode
 
 ARG UNIQUE_ID_FOR_CACHEFROM=vscode
 
@@ -193,11 +154,10 @@ RUN apt-get update \
     && apt-get install --assume-yes --no-install-recommends \
         openssh-client \
         sudo \
-        # Live Share (Extension) deps
-        libssl1.1 \
+        # VSCode Live Share Extension dependencies
+        libicu67 \
         libkrb5-3 \
         zlib1g \
-        libicu63 \
         gnome-keyring \
         libsecret-1-0 \
         desktop-file-utils \
@@ -205,17 +165,3 @@ RUN apt-get update \
     && apt-get autoremove --assume-yes \
     && apt-get clean --assume-yes \
     && rm -rf /var/lib/apt/lists/*
-
-ARG VCS_REF
-ARG CREATED
-ARG VERSION=$PHP_VERSION
-LABEL org.opencontainers.image.revision=$VCS_REF
-LABEL org.opencontainers.image.version=$VERSION
-LABEL org.opencontainers.image.created=$CREATED
-LABEL org.opencontainers.image.title=php80-fpm
-LABEL org.opencontainers.image.description="A PHP 8.0 based base image"
-LABEL org.opencontainers.image.url=https://github.com/Ilyes512/docker-php80-fpm
-LABEL org.opencontainers.image.documentation=https://github.com/Ilyes512/docker-php80-fpm/blob/master/README.md
-LABEL org.opencontainers.image.vendor="ilyes512"
-LABEL org.opencontainers.image.licenses=MIT
-LABEL org.opencontainers.image.source=https://github.com/Ilyes512/docker-php80-fpm
