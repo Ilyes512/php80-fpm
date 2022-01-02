@@ -1,16 +1,16 @@
-# docker-php80-fpm
+# php80-fpm
 
 A PHP 8.0 (FPM) based Docker base image.
 
-[![Build Docker images](https://github.com/Ilyes512/docker-php80-fpm/workflows/Build%20Docker%20images/badge.svg)](https://github.com/Ilyes512/docker-php80-fpm/actions?query=workflow%3A%22Build+Docker+images%22)
+[![Build Images](https://github.com/Ilyes512/php80-fpm/workflows/Build%20Images/badge.svg)](https://github.com/Ilyes512/php80-fpm/actions?query=workflow%3A%22Build+Images%22)
 
 ## Pulling the images
 
 ```
-docker pull ilyes512/php80-fpm:runtime-latest
-docker pull ilyes512/php80-fpm:builder-latest
-docker pull ilyes512/php80-fpm:builder-nodejs-latest
-docker pull ilyes512/php80-fpm:vscode-latest
+docker pull ghrc.io/ilyes512/php80-fpm:runtime-latest
+docker pull ghrc.io/ilyes512/php80-fpm:builder-latest
+docker pull ghrc.io/ilyes512/php80-fpm:builder-nodejs-latest
+docker pull ghrc.io/ilyes512/php80-fpm:vscode-latest
 ```
 
 The tag scheme: `{TARGET}-{VERSION}`
@@ -32,25 +32,25 @@ There are 2 targets at the moment:
 Building `runtime`-target:
 
 ```
-docker build --tag ilyes512/php80-fpm:runtime-latest --target runtime .
+docker build --tag ghrc.io/ilyes512/php80-fpm:runtime-latest --target runtime .
 ```
 
 Building `builder`-target:
 
 ```
-docker build --tag ilyes512/php80-fpm:builder-latest --target builder .
+docker build --tag ghrc.io/ilyes512/php80-fpm:builder-latest --target builder .
 ```
 
 Building `builder_nodejs`-target:
 
 ```
-docker build --tag ilyes512/php80-fpm:builder-nodejs-latest --target builder_nodejs .
+docker build --tag ghrc.io/ilyes512/php80-fpm:builder-nodejs-latest --target builder_nodejs .
 ```
 
 Building `vscode`-target:
 
 ```
-docker build --tag ilyes512/php80-fpm:vscode-latest --target vscode .
+docker build --tag ghrc.io/ilyes512/php80-fpm:vscode-latest --target vscode .
 ```
 
 ## Task commands
@@ -58,8 +58,25 @@ docker build --tag ilyes512/php80-fpm:vscode-latest --target vscode .
 Available [Task](https://taskfile.dev/#/) commands:
 
 ```
-task: Available tasks for this project:
-
-* d:build:      Build all PHP Docker image targets
-* d:lint:       Apply a Dockerfile linter (https://github.com/hadolint/hadolint)
+* act:master:   Run Act with push event on master branch
+* act:pr:       Run Act with pull_request event
+* act:tag:      Run Act with tag (push) event
+* build:        Build all PHP Docker image targets
+* lint:         Apply a Dockerfile linter (https://github.com/hadolint/hadolint)
+* shell:        Interactive shell
 ```
+
+### Act tasks
+
+[Act](https://github.com/nektos/act) is a tool to run Github Actions locally. Before you can run Act and the
+`act:*`-tasks you need to add an `GITHUB_TOKEN`-secret. You can do this by adding the following
+Act config file to you users `$HOME`-directory:
+
+File path: `~/.actrc`
+```
+-s GITHUB_TOKEN=<your_github_token>
+```
+
+Replace `<your_github_token>` with a Github personal acces token. You can generate a new token
+[here](https://github.com/settings/tokens/new?description=Act) (no scopes
+are needed!).

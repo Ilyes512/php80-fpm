@@ -1,71 +1,72 @@
 version: "3"
 
-dotenv: [.env-taskfile]
-
 silent: true
 
-########################################################################################################################
-#
-# TOC
-#
-########################################################################################################################
-#
-# 1. BUILD
-#
-########################################################################################################################
+vars:
+  DOCKER_REPO: ghrc.io
+  DOCKER_OWNER: ilyes512
+  DOCKER_IMAGE_NAME: php80-fpm
+  HADOLINT_TAG_VERSION: v2.8.0
+
+includes:
+  act:
+    taskfile: ./act/Taskfile.yml
+    dir: ./act
 
 tasks:
-  ######################################################################################################################
-  #
-  #  1. BUILD
-  #
-  ######################################################################################################################
 
-  d:build:
+  build:
     desc: Build all PHP Docker image targets
     cmds:
-      - task: d:build:target
+      - task: build:target
         vars:
           TARGET: runtime
-          TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
-      - task: d:build:target
+      - task: build:target
         vars:
           TARGET: builder
-          TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
-      - task: d:build:target
+      - task: build:target
         vars:
           TARGET: builder_nodejs
-          TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
-      - task: d:build:target
+      - task: build:target
         vars:
           TARGET: vscode
-          TAG_VERSION: '{{.TAG_VERSION | default "latest"}}'
 
-  d:build:target:
+  build:target:
     deps:
-      - task: d:lint
+      - task: lint
     preconditions:
-      - sh: test '{{.TARGET}}' != '<no value>'
+      - sh: >
+          test '{{.TARGET}}' = 'runtime'
+          -o '{{.TARGET}}' = 'builder'
+          -o '{{.TARGET}}' = 'builder_nodejs'
+          -o '{{.TARGET}}' = 'vscode'
         msg: TARGET needs to contain the Docker TARGET [runtime, builder, builder_nodejs, vscode]
-      - sh: test '{{.TAG_VERSION}}' != '<no value>'
-        msg: TAG_VERSION needs to contain the tag that will be assigned to the Docker build
+    vars:
+      VERSION: '{{.VERSION | default "latest"}}'
     cmds:
       - docker build
-        --build-arg VCS_REF=$(git rev-parse HEAD)
-        --build-arg CREATED=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
         --target {{.TARGET}}
-        --tag $TAG_REPOSITORY/$TAG_NAME:{{.TARGET}}-{{.TAG_VERSION}}
+        --tag {{.DOCKER_REPO}}/{{.DOCKER_OWNER}}/{{.DOCKER_IMAGE_NAME}}:{{.TARGET}}-{{.VERSION}}
         .
 
-  d:lint:
+  lint:
     desc: Apply a Dockerfile linter (https://github.com/hadolint/hadolint)
     cmds:
       - docker run
         --interactive
         --rm
-        hadolint/hadolint:$HADOLINT_TAG_VERSION
+        --volume $(pwd)/.hadolint.yml:/.hadolint.yml
+        hadolint/hadolint:{{.HADOLINT_TAG_VERSION}}
         hadolint
-        --ignore DL3018
-        --ignore DL3008
         -
         < Dockerfile
+
+  shell:
+    desc: Interactive shell
+    interactive: true
+    cmds:
+      - docker run
+        --interactive
+        --tty
+        --rm
+        {{.DOCKER_REPO}}/{{.DOCKER_OWNER}}/{{.DOCKER_IMAGE_NAME}}:builder_nodejs-{{.VERSION | default "latest" }}
