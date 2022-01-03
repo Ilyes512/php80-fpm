@@ -7,3 +7,5 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - update-type: ["version-update:semver-major", "version-update:semver-minor"]
