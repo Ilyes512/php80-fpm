@@ -1,10 +1,10 @@
 # Latest version of PHP base image: https://hub.docker.com/_/php?tab=tags
-FROM php:8.0.20-fpm-bullseye AS runtime
+FROM php:8.0.28-fpm-bullseye AS runtime
 
 ARG UNIQUE_ID_FOR_CACHEFROM=runtime
 
 # Latest version of event-extension: https://pecl.php.net/package/event
-ARG PHP_EVENT_VERSION=3.0.6
+ARG PHP_EVENT_VERSION=3.0.8
 
 ENV SMTPHOST mail
 ENV SMTPEHLO localhost
@@ -45,6 +45,8 @@ RUN apt-get update \
         # Dependency of PHP event-extension
         libevent-dev \
         libssl-dev \
+        # Dependency of PHP soap-extension
+        libxml2-dev \
     # Configure PHP gd-extension
     && docker-php-ext-configure gd \
         --enable-gd \
@@ -60,10 +62,12 @@ RUN apt-get update \
         gd \
         bcmath \
         zip \
+        soap \
         # Dependency of PHP event-extension
         sockets \
     && pecl install "event-$PHP_EVENT_VERSION" \
     && docker-php-ext-enable --ini-name docker-php-ext-zz-event.ini event \
+    && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     # Purge packages that where only needed for building php extensions
     && apt-get purge --assume-yes \
         $PHPIZE_DEPS \
@@ -75,7 +79,7 @@ RUN apt-get update \
         libzip-dev \
         libevent-dev \
         libssl-dev \
-    && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+        libxml2-dev \
     # Cleanup
     && rm -rf /var/www/* \
     && apt-get autoremove --assume-yes \
@@ -90,11 +94,11 @@ FROM runtime AS builder
 ARG UNIQUE_ID_FOR_CACHEFROM=builder
 
 # Latest version of Phive: https://api.github.com/repos/phar-io/phive/releases/latest
-ARG PHIVE_VERSION=0.15.1
+ARG PHIVE_VERSION=0.15.2
 # Latest version of Composer: https://getcomposer.org/download
-ARG COMPOSER_VERSION=2.3.5
+ARG COMPOSER_VERSION=2.5.4
 # Latest version of Xdebug: https://github.com/xdebug/xdebug/tags or https://pecl.php.net/package/xdebug
-ARG XDEBUG_VERSION=3.1.4
+ARG XDEBUG_VERSION=3.2.0
 
 RUN apt-get update \
     && apt-get install --assume-yes --no-install-recommends \
@@ -121,8 +125,7 @@ RUN apt-get update \
     && docker-php-ext-enable xdebug \
     && cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
     # Cleanup
-    && apt-get purge --assume-yes \
-        $PHPIZE_DEPS \
+    && apt-get purge --assume-yes $PHPIZE_DEPS \
     && apt-get autoremove --assume-yes \
     && apt-get clean --assume-yes \
     && rm -rf /var/lib/apt/lists/* \
