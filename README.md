@@ -32,25 +32,25 @@ There are multiple targets:
 Building `runtime`-target:
 
 ```
-docker build --tag ghcr.io/ilyes512/php82-fpm:runtime-latest --target runtime .
+docker build --tag ghcr.io/ilyes512/php80-fpm:runtime-latest --target runtime .
 ```
 
 Building `builder`-target:
 
 ```
-docker build --tag ghcr.io/ilyes512/php82-fpm:builder-latest --target builder .
+docker build --tag ghcr.io/ilyes512/php80-fpm:builder-latest --target builder .
 ```
 
 Building `builder_nodejs`-target:
 
 ```
-docker build --tag ghcr.io/ilyes512/php82-fpm:builder-nodejs-latest --target builder_nodejs .
+docker build --tag ghcr.io/ilyes512/php80-fpm:builder-nodejs-latest --target builder_nodejs .
 ```
 
 Building `vscode`-target:
 
 ```
-docker build --tag ghcr.io/ilyes512/php82-fpm:vscode-latest --target vscode .
+docker build --tag ghcr.io/ilyes512/php80-fpm:vscode-latest --target vscode .
 ```
 
 ## Task commands
